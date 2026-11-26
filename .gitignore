@@ -1,0 +1,25 @@
+# Java / Maven
+target/
+*.class
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# 機密
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Claude Code 本機暫存
+.claude/

@@ -1,0 +1,6 @@
+rootline:
+  kyc:
+    fingerprint-key: test-only-fingerprint-key-0123456789abcdef
+  outbox:
+    relay:
+      enabled: false

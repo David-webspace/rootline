@@ -1,0 +1,9 @@
+rootline:
+  outbox:
+    relay:
+      enabled: false
+
+spring:
+  kafka:
+    listener:
+      auto-startup: false

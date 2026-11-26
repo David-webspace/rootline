@@ -1,0 +1,4 @@
+# 本機開發：沒有提供 JWT 私鑰時允許臨時產生（重啟後舊 token 失效）
+rootline:
+  jwt:
+    allow-ephemeral-key: true

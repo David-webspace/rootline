@@ -1,0 +1,2 @@
+dev.rootline.messaging.outbox.OutboxRelayAutoConfiguration
+dev.rootline.messaging.consumer.ConsumerSupportAutoConfiguration

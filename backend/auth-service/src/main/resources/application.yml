@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://${ROOTLINE_DB_HOST:localhost}:${ROOTLINE_DB_PORT:5432}/rootline_auth
+    username: ${ROOTLINE_DB_USER:rootline}
+    password: ${ROOTLINE_DB_PASSWORD:rootline}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${ROOTLINE_REDIS_HOST:localhost}
+      port: ${ROOTLINE_REDIS_PORT:6379}
+      password: ${ROOTLINE_REDIS_PASSWORD:}
+      timeout: 500ms
+  kafka:
+    bootstrap-servers: ${ROOTLINE_KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        # broker 不在時快速失敗，不要讓 outbox relay 卡住 60 秒還握著資料列鎖
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+rootline:
+  messaging:
+    # 業務規則例外重試也不會過，直接進 DLT
+    non-retryable: dev.rootline.auth.application.domain.shared.DomainException
+  jwt:
+    issuer: rootline-auth
+    ttl: 8h
+    # PKCS#8 PEM，例如 file:/run/secrets/rootline-jwt.pem；沒設時只有 dev profile 會臨時產生
+    private-key-location: ${ROOTLINE_JWT_PRIVATE_KEY_LOCATION:}
+    allow-ephemeral-key: false
+  security:
+    bcrypt-strength: 12
+    dynamic-rules:
+      # 第二軌權限：讀 Redis 裡由 dept-tree 發佈的租戶規則
+      enabled: true
+      cache-ttl: 30s
+  outbox:
+    relay:
+      # 自己發佈的 topic，以及訂閱的 topic 與其 dead-letter topic（啟動時確保存在）
+      topics: [rootline.auth.user, rootline.auth.role, rootline.auth.group, rootline.dept.permission, rootline.dept.department, rootline.dept.permission.DLT, rootline.dept.department.DLT, rootline.tenant.lifecycle, rootline.tenant.lifecycle.DLT]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

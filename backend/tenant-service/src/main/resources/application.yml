@@ -1,0 +1,34 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: tenant-service
+  datasource:
+    url: jdbc:postgresql://${ROOTLINE_DB_HOST:localhost}:${ROOTLINE_DB_PORT:5432}/rootline_tenant
+    username: ${ROOTLINE_DB_USER:rootline}
+    password: ${ROOTLINE_DB_PASSWORD:rootline}
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${ROOTLINE_KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+
+rootline:
+  security:
+    bcrypt-strength: 12
+  outbox:
+    relay:
+      topics: [rootline.tenant.lifecycle]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

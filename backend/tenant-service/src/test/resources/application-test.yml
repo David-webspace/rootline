@@ -1,0 +1,6 @@
+rootline:
+  security:
+    bcrypt-strength: 4
+  outbox:
+    relay:
+      enabled: false

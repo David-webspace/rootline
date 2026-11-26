@@ -1,0 +1,31 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: userprofile-service
+  datasource:
+    url: jdbc:postgresql://${ROOTLINE_DB_HOST:localhost}:${ROOTLINE_DB_PORT:5432}/rootline_profile
+    username: ${ROOTLINE_DB_USER:rootline}
+    password: ${ROOTLINE_DB_PASSWORD:rootline}
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${ROOTLINE_KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+rootline:
+  messaging:
+    non-retryable: dev.rootline.userprofile.application.domain.shared.DomainException
+  outbox:
+    relay:
+      # 這個服務目前只消費不發佈；仍宣告訂閱的 topic 與 DLT，啟動時確保存在
+      topics: [rootline.auth.user, rootline.kyc.status, rootline.auth.user.DLT, rootline.kyc.status.DLT]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

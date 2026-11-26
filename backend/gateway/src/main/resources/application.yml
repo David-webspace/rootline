@@ -1,0 +1,62 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: gateway
+  autoconfigure:
+    # Gateway 不處理業務 controller，不需要 shared-kernel 的權限攔截器；只用它的 header 常數
+    exclude: dev.rootline.kernel.security.RootlineSecurityAutoConfiguration
+  data:
+    redis:
+      host: ${ROOTLINE_REDIS_HOST:localhost}
+      port: ${ROOTLINE_REDIS_PORT:6379}
+      password: ${ROOTLINE_REDIS_PASSWORD:}
+      # 限流在每個請求的關鍵路徑上，Redis 慢就快速失敗、改走本機限流
+      timeout: 200ms
+      connect-timeout: 500ms
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          http-client:
+            connect-timeout: 2s
+            read-timeout: 5s
+
+rootline:
+  gateway:
+    services:
+      auth: ${ROOTLINE_AUTH_URI:http://localhost:8080}
+      dept: ${ROOTLINE_DEPT_URI:http://localhost:8081}
+      tenant: ${ROOTLINE_TENANT_URI:http://localhost:8082}
+      kyc: ${ROOTLINE_KYC_URI:http://localhost:8083}
+      profile: ${ROOTLINE_PROFILE_URI:http://localhost:8084}
+    jwt:
+      jwks-uri: ${ROOTLINE_AUTH_URI:http://localhost:8080}/api/auth/.well-known/jwks.json
+      issuer: rootline-auth
+      clock-skew: 30s
+      min-refresh-interval: 10s
+    public-paths:
+      - { method: POST, path: /api/auth/login }
+      - { method: POST, path: /api/auth/register }
+      - { method: GET, path: /api/auth/.well-known/jwks.json }
+    rate-limit:
+      enabled: true
+      authenticated: { capacity: 60, refill-per-second: 20 }
+      anonymous: { capacity: 20, refill-per-second: 5 }
+      # 每 IP 最多連續 10 次，之後每 6 秒補 1 次（約每分鐘 10 次）
+      login: { capacity: 10, refill-per-second: 0.1667 }
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    # Redis 掛掉時 Gateway 會改用本機限流、仍可服務，不該因此被判定為不健康
+    redis:
+      enabled: false
+
+logging:
+  pattern:
+    correlation: "[%X{traceId:-}] "

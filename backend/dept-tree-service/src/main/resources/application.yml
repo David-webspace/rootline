@@ -1,0 +1,52 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: dept-tree-service
+  datasource:
+    url: jdbc:postgresql://${ROOTLINE_DB_HOST:localhost}:${ROOTLINE_DB_PORT:5432}/rootline_dept
+    username: ${ROOTLINE_DB_USER:rootline}
+    password: ${ROOTLINE_DB_PASSWORD:rootline}
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${ROOTLINE_REDIS_HOST:localhost}
+      port: ${ROOTLINE_REDIS_PORT:6379}
+      password: ${ROOTLINE_REDIS_PASSWORD:}
+      timeout: 500ms
+  kafka:
+    bootstrap-servers: ${ROOTLINE_KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        # broker 不在時快速失敗，不要讓 outbox relay 卡住 60 秒還握著資料列鎖
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+rootline:
+  messaging:
+    non-retryable: dev.rootline.dept.application.domain.shared.DomainException
+  security:
+    dynamic-rules:
+      # 第二軌權限：讀 Redis 裡由 dept-tree 發佈的租戶規則
+      enabled: true
+      cache-ttl: 30s
+  dept:
+    snapshot-interval: 20
+  outbox:
+    relay:
+      # 自己發佈的 topic，以及訂閱的租戶生命週期 topic 與其 dead-letter topic
+      topics: [rootline.dept.department, rootline.dept.permission, rootline.tenant.lifecycle, rootline.tenant.lifecycle.DLT]

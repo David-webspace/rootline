@@ -1,0 +1,19 @@
+# 快照間隔調小，讓一般測試就會經過「快照 + 尾段事件」的載入路徑
+rootline:
+  security:
+    dynamic-rules:
+      enabled: true
+      # 測試立即生效，不等快取過期
+      cache-ttl: 0s
+  dept:
+    snapshot-interval: 3
+  outbox:
+    relay:
+      # 這組測試不跑 Kafka；relay 另有專門的整合測試
+      enabled: false
+
+spring:
+  kafka:
+    listener:
+      # 這組測試不連 Kafka；租戶開通的處理邏輯直接呼叫 service 測試
+      auto-startup: false

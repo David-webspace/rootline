@@ -1,0 +1,35 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: kyc-service
+  datasource:
+    url: jdbc:postgresql://${ROOTLINE_DB_HOST:localhost}:${ROOTLINE_DB_PORT:5432}/rootline_kyc
+    username: ${ROOTLINE_DB_USER:rootline}
+    password: ${ROOTLINE_DB_PASSWORD:rootline}
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${ROOTLINE_KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+
+rootline:
+  kyc:
+    # 證件指紋的 HMAC 金鑰（至少 32 字元）；沒設定服務不會啟動
+    fingerprint-key: ${ROOTLINE_KYC_FINGERPRINT_KEY:}
+  outbox:
+    relay:
+      topics: [rootline.kyc.status]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,9 @@
+rootline:
+  jwt:
+    allow-ephemeral-key: true
+  security:
+    # 測試用最低成本，避免 bcrypt 拖慢測試；正式環境為 12
+    bcrypt-strength: 4
+    dynamic-rules:
+      # 這組測試不需要 Redis；動態規則在 dept-tree 與 shared-kernel 測試
+      enabled: false
